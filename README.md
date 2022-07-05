@@ -28,3 +28,20 @@ The package can be installed directly from Github using:
 ```  
 /usr/bin/pip3 install git+https://github.com/kemerelab/treadmillio_sound_server.git
 ```
+
+To run as a system service, create a file like `/lib/systemd/system/treadmillio_sound_server_service.service` that has the content
+```
+[Unit]
+Description=TreadmillIO_Sound_Serviec
+After=network.target
+
+[Service]
+ExecStart=/home/kemerelab/.local/bin/treadmillio-start-sound-server
+Restart=always
+User=kemerelab
+
+[Install]
+WantedBy=multi-user.target
+```
+Then run `sudo systemctl enable treadmillio_sound_server_service.service`. For testing, you can
+instead run `sudo systemctl start treadmillio_sound_server_service.service`.
