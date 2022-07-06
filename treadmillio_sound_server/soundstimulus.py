@@ -1,11 +1,11 @@
-import pickle
 
 from multiprocessing import Process, Pipe, Queue, Event, current_process
-from setproctitle import setproctitle
-
+import traceback as tb
+import logging
 import pickle
 
-import traceback as tb
+from setproctitle import setproctitle
+
 
 from .alsainterface import ALSAPlaybackSystem
 from .alsainterface import normalize_output_device
@@ -27,15 +27,15 @@ def run_playback_process(device_config, stimuli_config, control_pipe, stop_event
     status_queue.close()
     try:
         # cProfile.runctx('playback_system.play()', globals(), locals(), "results.prof") # useful for debugging
-        print('Playback starting')
+        logging.INFO('Starting ALSA playback loop')
         playback_system.play(stop_event)
     except KeyboardInterrupt:
-        print('Caught KeyboardInterrupt in ALSA playback process')
+        logging.DEBUG('Caught KeyboardInterrupt in ALSA playback process')
         playback_system.running = False # I don't think this does anything
     except Exception as e:
         raise e
     
-    print('Playback done.')
+    logging.INFO('ALSA playback loop returned.')
 
 class SoundStimulusController():
     def __init__(self, device_config, stimuli_config, verbose=0):
@@ -77,7 +77,7 @@ class SoundStimulusController():
 
 
     def send_stop_event(self):
-        print('Raising stop event.')
+        logging.INFO('Raising stop event for ALSA process.')
         self._stop_event.set()
 
     def __del__(self):
@@ -88,12 +88,12 @@ class SoundStimulusController():
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if exc_type:
-            print('SoundStimulController: exiting because of exception <{}>'.format(
+            logging.ERROR('SoundStimulController: exiting because of exception <{}>'.format(
                 exc_type.__name__))
             # tb.print_tb(exc_traceback)
 
         self._stop_event.set()
-        print('SoundStimulController waiting for ALSA processes to join. TODO: Handle other than KeyboardInterrupt!')
+        logging.INFO('SoundStimulController waiting for ALSA processes to join. TODO: Handle other than KeyboardInterrupt!')
         # TODO: Do we need to differentiate different signals? If it's not KeyboardInterrupt, we need to tell it to stop:
         #self.alsa_playback_pipe.send_bytes(pickle.dumps({'StopMessage': True}))
 

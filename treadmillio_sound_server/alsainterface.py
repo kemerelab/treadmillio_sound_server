@@ -2,6 +2,7 @@ import alsaaudio
 import numpy as np
 import time
 import pickle
+import logging
 
 
 # Default parameters
@@ -125,7 +126,7 @@ class ALSAPlaybackSystem():
             if stimulus_name in ILLEGAL_STIMULUS_NAMES:
                 raise(ValueError('{} is an illegal name for a stimulus.'.format(stimulus_name)))
 
-            print('Adding stimulus {}...'.format(stimulus_name))
+            logging.INFO('Adding stimulus {}...'.format(stimulus_name))
 
             channel = data['Channel']
             self.stimuli[stimulus_name] = Stimulus(data['StimData'], self.data_buf[:,:,k], 
@@ -137,8 +138,8 @@ class ALSAPlaybackSystem():
         # start reading from the pipe to get what ever initialization happens out of the way
         if self.control_pipe.poll():
             msg = self.control_pipe.recv_bytes()    # Read from the output pipe and do nothing
-            print('Unexpected message before start: {}'.format(msg))
-            print('TODO: Figure out how to shutdown pipes properly\n') # TODO here
+            logging.DEBUG('Unexpected message before start: {}'.format(msg))
+            logging.DEBUG('TODO: Figure out how to shutdown pipes properly\n') # TODO here
 
 
         # Open alsa device
@@ -185,11 +186,16 @@ class ALSAPlaybackSystem():
                         elif key is not None: # pass if key is None
                             raise ValueError('Unknown stimulus {}.'.format(key))
                 except:
-                    print('Exception: ', commands)
+                    logging.ERROR('Exception: ', commands)
 
             if stop_event.is_set():
-                print('Breaking beacuse of a stop event.')
+                logging.INFO('ALSA playback received a stop event.')
                 break
+
+        if self.adevice:
+            self.adevice.close()
+            self.adevice = None
+
 
 
 def normalize_output_device(config):
