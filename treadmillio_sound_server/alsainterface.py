@@ -127,6 +127,7 @@ class ALSAPlaybackSystem():
             if stimulus_name in ILLEGAL_STIMULUS_NAMES:
                 raise(ValueError('{} is an illegal name for a stimulus.'.format(stimulus_name)))
 
+            print('Adding stimulus: ', stimulus_name)
             logging.INFO('Adding stimulus {}...'.format(stimulus_name))
 
             channel = data['Channel']
