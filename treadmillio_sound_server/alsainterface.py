@@ -152,7 +152,7 @@ class ALSAPlaybackSystem():
 
         # Open alsa device
         self.adevice = alsaaudio.PCM(type=alsaaudio.PCM_PLAYBACK, 
-            mode=alsaaudio.PCM_NONBLOCK, # PCM_NORMAL, 
+            mode=alsaaudio.PCM_NORMAL, # PCM_NORMAL, 
             rate=fs, channels=num_channels, format=alsaaudio.PCM_FORMAT_S16_LE, 
             periodsize=buffer_size, 
             device=device)
