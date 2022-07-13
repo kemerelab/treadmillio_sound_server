@@ -27,15 +27,15 @@ def run_playback_process(device_config, stimuli_config, control_pipe, stop_event
     status_queue.close()
     try:
         # cProfile.runctx('playback_system.play()', globals(), locals(), "results.prof") # useful for debugging
-        logging.INFO('Starting ALSA playback loop')
+        logging.info('Starting ALSA playback loop')
         playback_system.play(stop_event)
     except KeyboardInterrupt:
-        logging.DEBUG('Caught KeyboardInterrupt in ALSA playback process')
+        logging.debug('Caught KeyboardInterrupt in ALSA playback process')
         playback_system.running = False # I don't think this does anything
     except Exception as e:
         raise e
     
-    logging.INFO('ALSA playback loop returned.')
+    logging.info('ALSA playback loop returned.')
 
 class SoundStimulusController():
     def __init__(self, device_config, stimuli_config, verbose=0):
@@ -77,7 +77,7 @@ class SoundStimulusController():
 
 
     def send_stop_event(self):
-        logging.INFO('Raising stop event for ALSA process.')
+        logging.info('Raising stop event for ALSA process.')
         self._stop_event.set()
 
     def __del__(self):
@@ -93,7 +93,7 @@ class SoundStimulusController():
             # tb.print_tb(exc_traceback)
 
         self._stop_event.set()
-        logging.INFO('SoundStimulController waiting for ALSA processes to join. TODO: Handle other than KeyboardInterrupt!')
+        logging.info('SoundStimulController waiting for ALSA processes to join. TODO: Handle other than KeyboardInterrupt!')
         # TODO: Do we need to differentiate different signals? If it's not KeyboardInterrupt, we need to tell it to stop:
         #self.alsa_playback_pipe.send_bytes(pickle.dumps({'StopMessage': True}))
 

@@ -127,8 +127,7 @@ class ALSAPlaybackSystem():
             if stimulus_name in ILLEGAL_STIMULUS_NAMES:
                 raise(ValueError('{} is an illegal name for a stimulus.'.format(stimulus_name)))
 
-            print('Adding stimulus: ', stimulus_name)
-            logging.INFO('Adding stimulus {}...'.format(stimulus_name))
+            logging.info('Adding stimulus {}...'.format(stimulus_name))
 
             channel = data['Channel']
             self.stimuli[stimulus_name] = Stimulus(data['StimData'], self.data_buf[:,:,k], 
@@ -140,8 +139,8 @@ class ALSAPlaybackSystem():
         # start reading from the pipe to get what ever initialization happens out of the way
         if self.control_pipe.poll():
             msg = self.control_pipe.recv_bytes()    # Read from the output pipe and do nothing
-            logging.DEBUG('Unexpected message before start: {}'.format(msg))
-            logging.DEBUG('TODO: Figure out how to shutdown pipes properly\n') # TODO here
+            logging.debug('Unexpected message before start: {}'.format(msg))
+            logging.debug('TODO: Figure out how to shutdown pipes properly\n') # TODO here
 
         # if dtype == 'int16':
         #     self.adevice.setformat(alsaaudio.PCM_FORMAT_S16_LE)
@@ -192,10 +191,10 @@ class ALSAPlaybackSystem():
                         elif key is not None: # pass if key is None
                             raise ValueError('Unknown stimulus {}.'.format(key))
                 except:
-                    logging.ERROR('Exception: ', commands)
+                    logging.error('Exception: ', commands)
 
             if stop_event.is_set():
-                logging.INFO('ALSA playback received a stop event.')
+                logging.info('ALSA playback received a stop event.')
                 break
 
 
