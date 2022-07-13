@@ -1,3 +1,4 @@
+from tracemalloc import stop
 import alsaaudio
 import numpy as np
 import time
@@ -141,18 +142,20 @@ class ALSAPlaybackSystem():
             logging.DEBUG('Unexpected message before start: {}'.format(msg))
             logging.DEBUG('TODO: Figure out how to shutdown pipes properly\n') # TODO here
 
-
-        # Open alsa device
-        self.adevice = alsaaudio.PCM(device=device)
-        self.adevice.setchannels(num_channels) # We'll always present stereo audio
-        self.adevice.setrate(fs)
-        if dtype == 'int16':
-            self.adevice.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        # if dtype == 'int16':
+        #     self.adevice.setformat(alsaaudio.PCM_FORMAT_S16_LE)
         # elif dtype == 'int32':
         #     self.adevice.setformat(alsaaudio.PCM_FORMAT_S32_LE)
-        else:
+        if dtype  != 'int16':
             raise(ValueError("dtypes other than 'int16' not currently supported."))
-        self.adevice.setperiodsize(buffer_size)
+
+
+        # Open alsa device
+        self.adevice = alsaaudio.PCMPCM(type=alsaaudio.PCM_PLAYBACK, 
+            mode=alsaaudio.PCM_NONBLOCK, # PCM_NORMAL, 
+            rate=fs, channels=num_channels, format=alsaaudio.PCM_FORMAT_S16_LE, 
+            periodsize=buffer_size, 
+            device=device)
 
         print('\nALSA playback configuration ' + '-'*10 + '\n')
         self.adevice.dumpinfo()
@@ -175,8 +178,10 @@ class ALSAPlaybackSystem():
                 stim.get_nextbuf()
             self.out_buf[:] = self.data_buf.sum(axis=2).astype(dtype=self.out_buf.dtype, order='C')
             res = self.adevice.write(self.out_buf)
+            while (res == 0) and ~stop_event.is_set:
+                res = self.adevice.write(self.out_buf)
 
-            while self.control_pipe.poll(): # is this safe? too many messages will certainly cause xruns!
+            while self.control_pipe.poll() and ~stop_event.is_set(): # is this safe? too many messages will certainly cause xruns!
                 msg = self.control_pipe.recv_bytes()    # Read from the output pipe and do nothing
                 commands = pickle.loads(msg)
                 try:
@@ -191,6 +196,7 @@ class ALSAPlaybackSystem():
             if stop_event.is_set():
                 logging.INFO('ALSA playback received a stop event.')
                 break
+
 
         if self.adevice:
             self.adevice.close()
